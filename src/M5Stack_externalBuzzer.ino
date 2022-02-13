@@ -230,7 +230,11 @@ void setLedColor(uint32_t color, const bool &forceFullBrightness = false);
 void setup()
 {
 
-	SerialAndTelnet.setWelcomeMsg((char *)"CarbonDioxide server by Embedded Softworks, s.r.o.\n\n");
+	#if BUILD_PICO_STAMP
+	SerialAndTelnet.setWelcomeMsg((char *)"Alarm beeper/Bell signal generator (M5Stamp variant) by Embedded Softworks, s.r.o.\n\n");
+	#else
+	SerialAndTelnet.setWelcomeMsg((char *)"Alarm beeper/Bell signal generator (M5AtomLite variant) by Embedded Softworks, s.r.o.\n\n");
+	#endif
 	SerialAndTelnet.setCallbackOnConnect(telnetConnected);
 	SerialAndTelnet.setCallbackOnDisconnect(telnetDisconnected);
 
@@ -305,7 +309,11 @@ void setup()
 void indexHandler(RequestContext& request)
 {
 	const char body[] =
-	"Alarm beeper/Bell signal generator <br>"
+#if BUILD_PICO_STAMP
+	"Alarm beeper/Bell signal generator (M5Stamp variant)<br>"
+#else
+	"Alarm beeper/Bell signal generator (M5AtomLite variant)<br>"
+#endif
 	"(c) 2021 Embedded Softworks, s.r.o. <br>"
 	"<br>"
 	"Click <a href=\"/get\">here</a> to retrieve co2, temperature and humidity readings<br>"

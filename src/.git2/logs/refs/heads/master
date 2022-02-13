@@ -1,9 +1,0 @@
-0000000000000000000000000000000000000000 f421dd07382a958619f7e5eedebe69f193e633ee Stanislav Ruzani <stanislav.ruzani@gmail.com> 1636879239 +0100	commit (initial): initial commit
-f421dd07382a958619f7e5eedebe69f193e633ee 22d3ba32768dce6358e8399d82369717b3462f32 Stanislav Ruzani <stanislav.ruzani@gmail.com> 1637095915 +0100	commit: build: added OTA support
-22d3ba32768dce6358e8399d82369717b3462f32 bdad6fdeb1a2f5ae44dca7b51c647107f91497d7 Stanislav Ruzani <stanislav.ruzani@gmail.com> 1637095936 +0100	commit: build: added .vscode files
-bdad6fdeb1a2f5ae44dca7b51c647107f91497d7 b2d24fd83db19a9b12d70c1d8805d5adba64b135 Stanislav Ruzani <stanislav.ruzani@gmail.com> 1637433818 +0100	commit: build: added support for M5Stamp build
-b2d24fd83db19a9b12d70c1d8805d5adba64b135 ac3fb2d9e9450646dc6b699c55fb3e56506c0c88 Stanislav Ruzani <stanislav.ruzani@gmail.com> 1637434055 +0100	commit (amend): build: added support for M5Stamp build
-ac3fb2d9e9450646dc6b699c55fb3e56506c0c88 c821e54a793792a546b05a14f3e28cd3997da05b Stanislav Ruzani <stanislav.ruzani@gmail.com> 1637603117 +0100	commit: update: added telnet support, code cleanup, separate thread for http server
-c821e54a793792a546b05a14f3e28cd3997da05b df25d71898b80b3283b94d80e6e7389c50082346 Stanislav Ruzani <stanislav.ruzani@gmail.com> 1637682663 +0100	commit: build: added local copy of TelnetSpy, added /pressure and /saveToEeprom handlers
-df25d71898b80b3283b94d80e6e7389c50082346 db8646c5758a5a2f61d4f68e5a7618ccdcf935cb Stanislav Ruzani <stanislav.ruzani@gmail.com> 1638018668 +0100	commit: build: fixed various compilation warninngs
-db8646c5758a5a2f61d4f68e5a7618ccdcf935cb 4815fd3cd6e36a6432329868be2cbadc5ad7d287 Stanislav Ruzani <stanislav.ruzani@gmail.com> 1638018734 +0100	commit: app: major upgrade:
