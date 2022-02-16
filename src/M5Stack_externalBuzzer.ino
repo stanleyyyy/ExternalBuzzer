@@ -19,6 +19,9 @@
 #include <map>
 #include <functional>
 
+#include "WebServer.h"
+#include <ESPAsyncWebServer.h>
+
 // this needs PathVariableHandlers library
 #include <UrlTokenBindings.h>
 #include <RichHttpServer.h>
@@ -80,7 +83,7 @@ int noteDurations2[] = {
 //
 
 using namespace std::placeholders;
-using RichHttpConfig = RichHttp::Generics::Configs::EspressifBuiltin;
+using RichHttpConfig = RichHttp::Generics::Configs::AsyncWebServer;
 using RequestContext = RichHttpConfig::RequestContextType;
 
 class Context {
@@ -88,6 +91,7 @@ public:
 	SemaphoreHandle_t m_mutex = NULL;
 	uint32_t m_watchdogResetTs = 0;
 	uint32_t m_periodicResetTs = 0;
+	bool m_watchdogReboot = false;
 
 	// http server
 	SimpleAuthProvider m_authProvider;
@@ -121,6 +125,7 @@ public:
 	: m_mutex(NULL)
 	, m_watchdogResetTs(0)
 	, m_periodicResetTs(0)
+	, m_watchdogReboot(false)
 	, m_server(80, m_authProvider)
 	, m_ledOn(true)
 	, m_brightness(BRIGHTNESS)
@@ -160,6 +165,14 @@ void watchdogReset()
 	}
 }
 
+void watchdogScheduleReboot()
+{
+	if (xSemaphoreTake(g_ctx.m_mutex, (TickType_t)5) == pdTRUE) {
+		g_ctx.m_watchdogReboot = true;
+		xSemaphoreGive(g_ctx.m_mutex);
+	}
+}
+
 void WatchdogTask(void *pvParameters __attribute__((unused)))
 {
 	while (1) {
@@ -168,6 +181,12 @@ void WatchdogTask(void *pvParameters __attribute__((unused)))
 		if (xSemaphoreTake(g_ctx.m_mutex, (TickType_t)5) == pdTRUE) {
 			diffMs = millis() - g_ctx.m_watchdogResetTs;
 			xSemaphoreGive(g_ctx.m_mutex);
+		}
+
+		if (g_ctx.m_watchdogReboot) {
+			LOG_PRINTF("Reboot scheduled, resetting the board!\n");
+			delay(2000);
+			ESP.restart();
 		}
 
 		if (diffMs > WATCHDOG_TIMEOUT){
@@ -201,6 +220,11 @@ void ServerTask(void *pvParameters __attribute__((unused)))
 		.on(HTTP_GET, rssiHandler);
 
 	g_ctx.m_server
+		.buildHandler("/reboot")
+		.setDisableAuthOverride()
+		.on(HTTP_GET, rebootHandler);
+
+	g_ctx.m_server
 		.buildHandler("/:operation/:value")
 		.setDisableAuthOverride()
 		.on(HTTP_GET, configureHandler);
@@ -209,8 +233,6 @@ void ServerTask(void *pvParameters __attribute__((unused)))
 	g_ctx.m_server.begin();
 
 	while (1) {
-		// handle one client
-		g_ctx.m_server.handleClient();
 		delay(100);
 	}
 }
@@ -314,15 +336,16 @@ void indexHandler(RequestContext& request)
 #else
 	"Alarm beeper/Bell signal generator (M5AtomLite variant)<br>"
 #endif
-	"(c) 2021 Embedded Softworks, s.r.o. <br>"
+	"(c) 2022 Embedded Softworks, s.r.o. <br>"
 	"<br>"
-	"Click <a href=\"/get\">here</a> to retrieve co2, temperature and humidity readings<br>"
 	"Click <a href=\"/led/100\">here</a> to set LED brightness to 100<br>"
 	"Click <a href=\"/alarm/on\">here</a> to turn alarm on<br>"
 	"Click <a href=\"/alarm/off\">here</a> to turn alarm off<br>"
 	"Click <a href=\"/bell/on\">here</a> to turn bell on<br>"
 	"Click <a href=\"/bell/off\">here</a> to turn bell off<br>"
-	"Click <a href=\"/rssi\">here</a> to get RSSI<br><br>";
+	"Click <a href=\"/rssi\">here</a> to get RSSI<br><br>"
+	"<br>"
+	"Click <a href=\"/reboot\">here</a> to reboot the device<br>";
 
 	request.response.sendRaw(200, "text/html", body);
 }
@@ -340,6 +363,18 @@ void rssiHandler(RequestContext& request)
 	request.response.json["currTimeMs"] = currTimeMs;
 	request.response.json["currTime"] = msToTimeStr(currTimeMs);
 	request.response.json["timeToReset"] = msToTimeStr(timeToReset());
+}
+
+void rebootHandler(RequestContext& request)
+{
+	// add time parameter
+	uint64_t currTimeMs = millis();
+	request.response.json["currTimeMs"] = currTimeMs;
+	request.response.json["currTime"] = msToTimeStr(currTimeMs);
+	request.response.json["timeToReset"] = msToTimeStr(timeToReset());
+
+	// schedule reboot
+	watchdogScheduleReboot();
 }
 
 void configureHandler(RequestContext& request)
@@ -514,6 +549,9 @@ void loop()
 			2,					// Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
 			NULL,				// Task Handle
 			ARDUINO_RUNNING_CORE);
+
+	// disable beep
+	setNote(-1);
 
 	while (1) {
 
