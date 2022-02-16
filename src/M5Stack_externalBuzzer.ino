@@ -251,6 +251,12 @@ void setLedColor(uint32_t color, const bool &forceFullBrightness = false);
 
 void setup()
 {
+	//
+	// make sure wifi is initialized before calling anything else
+	//
+
+	WiFi.mode(WIFI_MODE_STA);
+	WiFi.setSleep(false);
 
 	#if BUILD_PICO_STAMP
 	SerialAndTelnet.setWelcomeMsg((char *)"Alarm beeper/Bell signal generator (M5Stamp variant) by Embedded Softworks, s.r.o.\n\n");
