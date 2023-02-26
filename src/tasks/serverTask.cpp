@@ -119,13 +119,34 @@ public:
 	{
 		LOG_PRINTF("%s(%d): request from %s\n", __FUNCTION__, __LINE__, request->client()->remoteIP().toString().c_str());
 
+		int duration = 0;
+
+		if (request->hasParam("duration")) {
+			duration = atoi(request->getParam("duration")->value().c_str());
+
+			// limit duration to <0;1000>
+			if (duration < 0)
+				duration = 0;
+
+			if (duration > 1000)
+				duration = 1000;
+		}
+
 		if (request->hasParam("value")) {
 			if (request->getParam("value")->value() == "on") {
 				LOG_PRINTF("Alarm is on\n");
 				beeperAlarmOn(true);
+				if (duration) {
+					delay(duration);
+					beeperAlarmOn(false);
+				}
 			} else {
 				LOG_PRINTF("Alarm is off\n");
 				beeperAlarmOn(false);
+				if (duration) {
+					delay(duration);
+					beeperAlarmOn(true);
+				}
 			}
 			request->redirect("/index");
 		} else {
